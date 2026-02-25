@@ -1,4 +1,4 @@
-// src/entities/transaction-item.entity.ts
+
 
 import {
   Entity,
@@ -7,26 +7,31 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Transactions } from './transactions.entity';
+import { Transaction } from './transactions.entity';
+import { Type } from '../type/type.entity';
 
 @Entity('item')
 export class Item {
-  @PrimaryGeneratedColumn({ name: 'item_id' })
-  itemId!: number;
+  @PrimaryGeneratedColumn()
+  item_id!: number;
 
-  @Column({ name: 'transactions_id' })
-  transactionsId!: number;
+  @Column()
+  transaction_id!: number;
 
-  @Column({ length: 245 })
-  name!: string;
+  @Column({ nullable: true })
+  type_id!: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column({ length: 345, nullable: true })
+  item!: string;
+
+  @Column('decimal', { precision: 9, scale: 2 })
   price!: number;
 
-  @Column({ default: 1 })
-  quantity!: number;
+  @ManyToOne(() => Transaction, (transaction) => transaction.items)
+  @JoinColumn({ name: 'transaction_id' })
+  transaction!: Transaction;
 
-  @ManyToOne(() => Transactions, (transaction) => transaction.items)
-  @JoinColumn({ name: 'transactions_id' })
-  transactions!: Transactions;
+  @ManyToOne(() => Type, (type) => type.items, { nullable: true })
+  @JoinColumn({ name: 'type_id' })
+  itemType!: Type;
 }

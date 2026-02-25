@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/users.entity';
 import { Cc } from '../cc/cc.entity';
-import { Transactions } from '../transactions/transactions.entity';
+import { Transaction } from '../transactions/transactions.entity';
 import { Item } from '../transactions/item.entity';
 import { Store } from '../store/store.entity';
+import { Rule } from '../rule/rule.entity';
+import { Type } from '../type/type.entity';
 
 @Module({
     imports:[
@@ -18,7 +20,7 @@ import { Store } from '../store/store.entity';
       database: 'payments',
       synchronize: true,
       autoLoadEntities:true,
-      entities:[User,Cc,Transactions,Item,Store]
+      entities:[User,Cc,Transaction,Item,Store,Rule,Type]
       
     }),
    

@@ -1,4 +1,4 @@
-// src/entities/transaction.entity.ts
+
 
 import {
   Entity,
@@ -6,35 +6,35 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
-  JoinColumn,
   OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { Cc } from '../cc/cc.entity';
-import { Item } from './item.entity';
 import { Store } from '../store/store.entity';
+import { Item } from './item.entity';
 
 @Entity('transactions')
-export class Transactions {
-  @PrimaryGeneratedColumn({ name: 'transactions_id' })
-  transactionId!: number;
+export class Transaction {
+  @PrimaryGeneratedColumn()
+  transaction_id!: number;
 
-  @Column({ name: 'cc_id' })
-  ccId!: number;
+  @Column()
+  cc_id!: number;
 
-  @Column({ name: 'store_id' })
+  @Column()
   store_id!: number;
 
-  @CreateDateColumn({ name: 'create_at' })
-  createAt!: Date;
+  @CreateDateColumn()
+  create_at!: Date;
 
   @ManyToOne(() => Cc, (cc) => cc.transactions)
   @JoinColumn({ name: 'cc_id' })
   cc!: Cc;
 
-  @ManyToOne(() => Store, (store) => store.transaction)
-    @JoinColumn({ name: 'store_id' })
-    store!: Store;
+  @ManyToOne(() => Store, (store) => store.transactions)
+  @JoinColumn({ name: 'store_id' })
+  store!: Store;
 
-  @OneToMany(() => Item, (item) => item.transactions)
+  @OneToMany(() => Item, (item) => item.transaction)
   items!: Item[];
 }
