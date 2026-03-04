@@ -9,6 +9,8 @@ import { AuthGuard } from '../auth/auth.guard';
 @Module({
     imports:[TypeOrmModule.forFeature([Cc]),AuthModule],
     controllers:[CcController],
-    providers:[CcService,AuthGuard]
+    providers:[CcService,AuthGuard],
+    exports:[CcService]
+
 })
 export class CcModule {}

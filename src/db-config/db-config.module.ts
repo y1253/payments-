@@ -13,7 +13,7 @@ import { Type } from '../type/type.entity';
         TypeOrmModule.forRoot({     
       type: 'mysql',
       driver: require('mysql2'),
-      host: '52.255.206.58',
+      host: 'localhost',
       port: 3306,
       username: 'yg',
       password: '12345',

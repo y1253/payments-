@@ -12,7 +12,7 @@ export class CcService {
   ) {}
 
   // Same input always = same output. For lookups.
-  private hashCC(cc: string): string {
+   hashCC(cc: string): string {
     return createHash('sha256')
       .update(process.env.CC_HASH_SECRET + cc)
       .digest('hex');
@@ -38,7 +38,7 @@ export class CcService {
 
   async addCard(user_id: number, cc: string) {
 
-   const savedCc=await  this.ccRepo.findOneBy({hash:this.hashCC(cc)})
+   const savedCc=await  this.getCcByNumber(this.hashCC(cc))
    if(savedCc) throw new ConflictException('Cc number already exists')
     const card = this.ccRepo.create({
       user_id,
@@ -48,5 +48,15 @@ export class CcService {
     });
 
     return await  this.ccRepo.save(card);
+  }
+
+  async getCcByNumber(cc){
+   return await  this.ccRepo.findOneBy({hash:cc})
+  }
+
+  async getCcByLast4(last_4:string,user_id:number){
+    return await this.ccRepo.findOneBy({
+      user_id,last_4
+    })
   }
 }

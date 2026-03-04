@@ -10,7 +10,7 @@ import {
   Index,
 } from 'typeorm';
 import { User } from '../users/users.entity';
-import { Transactions } from '../transactions/transactions.entity';
+import { Transaction } from '../transactions/transactions.entity';
 
 @Entity('cc')
 export class Cc {
@@ -36,6 +36,6 @@ export class Cc {
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @OneToMany(() => Transactions, (transaction) => transaction.cc)
-  transactions!: Transactions[];
+  @OneToMany(() => Transaction, (transaction) => transaction.cc)
+  transactions!: Transaction[];
 }

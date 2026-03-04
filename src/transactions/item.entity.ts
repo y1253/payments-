@@ -24,6 +24,9 @@ export class Item {
   @Column({ length: 345, nullable: true })
   item!: string;
 
+  @Column({  nullable: true })
+  quantity!: number;
+
   @Column('decimal', { precision: 9, scale: 2 })
   price!: number;
 
