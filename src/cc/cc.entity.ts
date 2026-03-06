@@ -20,6 +20,9 @@ export class Cc {
   @Column({ name: 'user_id' })
   user_id!: number;
 
+  @Column({ name: 'type', length: 32, nullable: true })
+  type!: string;
+
   // The encrypted card number (AES-256 encrypted)
   @Column({ name: 'encrypted_number', length: 512, nullable: true })
   encrypted_number!: string;

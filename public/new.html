@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Order — Payment Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-hover: #243044;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --text-muted: #8b9cb3;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .container { max-width: 640px; margin: 0 auto; padding: 24px; }
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    h1 { font-size: 1.35rem; font-weight: 600; }
+    a.back { color: var(--accent); text-decoration: none; font-size: 0.875rem; display: inline-block; margin-bottom: 16px; }
+    a.back:hover { text-decoration: underline; }
+    .card-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card-panel h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    form label { display: block; font-size: 0.875rem; color: var(--text-muted); margin-bottom: 4px; }
+    form input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+      margin-bottom: 12px;
+    }
+    form input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row input { margin-bottom: 0; }
+    .btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost { background: var(--surface-hover); color: var(--text); }
+    .btn-ghost:hover { background: #2d3d52; }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.35); }
+    .items-table { width: 100%; border-collapse: collapse; }
+    .items-table th, .items-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    .items-table th { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .items-table input { margin-bottom: 0; }
+    .items-table .col-item { width: 40%; }
+    .items-table .col-qty { width: 15%; }
+    .items-table .col-price { width: 20%; }
+    .items-table .col-actions { width: 25%; }
+    .message { padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-size: 0.875rem; }
+    .message.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+    .message.success { background: rgba(34, 197, 94, 0.15); color: #86efac; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/" class="back">← Back to Payment Demo</a>
+      <h1>New Order</h1>
+      <p style="color: var(--text-muted); font-size: 0.9375rem; margin-top: 4px;">Enter store details, card number, and items to create a transaction.</p>
+    </header>
+
+    <form id="orderForm">
+      <div class="card-panel">
+        <h2>Store details</h2>
+        <label for="storeName">Store name *</label>
+        <input type="text" id="storeName" name="store.name" required placeholder="e.g. Walmart" />
+        <label for="storeStreet">Street</label>
+        <input type="text" id="storeStreet" name="store.street" placeholder="123 Main St" />
+        <div class="row">
+          <div>
+            <label for="storeCity">City</label>
+            <input type="text" id="storeCity" name="store.city" placeholder="Austin" />
+          </div>
+          <div>
+            <label for="storeRegion">Region</label>
+            <input type="text" id="storeRegion" name="store.region" placeholder="TX" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="storePostal">Postal code</label>
+            <input type="text" id="storePostal" name="store.postal_code" placeholder="78701" />
+          </div>
+          <div>
+            <label for="storeCountry">Country</label>
+            <input type="text" id="storeCountry" name="store.country" placeholder="USA" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h2>Payment</h2>
+        <label for="ccNumber">Card number *</label>
+        <input type="text" id="ccNumber" name="cc_number" required placeholder="4111 1111 1111 1111" maxlength="19" />
+        <p style="font-size: 0.8125rem; color: var(--text-muted); margin-top: -4px;">Must match a card already saved in the system.</p>
+      </div>
+
+      <div class="card-panel">
+        <h2>Items</h2>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th class="col-item">Item</th>
+              <th class="col-qty">Qty</th>
+              <th class="col-price">Price</th>
+              <th class="col-actions"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody">
+            <tr class="item-row">
+              <td><input type="text" name="item" placeholder="Product name" required /></td>
+              <td><input type="number" name="quantity" placeholder="1" min="1" step="1" required /></td>
+              <td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td>
+              <td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" id="addItemBtn" class="btn btn-ghost" style="margin-top: 12px;">+ Add item</button>
+      </div>
+
+      <div id="formMessage" class="message" style="display: none;"></div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create transaction</button>
+    </form>
+  </div>
+
+  <script>
+    const API = '';
+
+    document.getElementById('ccNumber').addEventListener('input', function () {
+      let v = this.value.replace(/\D/g, '');
+      const parts = [];
+      for (let i = 0; i < v.length && i < 19; i += 4) parts.push(v.slice(i, i + 4));
+      this.value = parts.join(' ').trim();
+    });
+
+    document.getElementById('addItemBtn').addEventListener('click', function () {
+      const tbody = document.getElementById('itemsBody');
+      const tr = document.createElement('tr');
+      tr.className = 'item-row';
+      tr.innerHTML = '<td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="quantity" placeholder="1" min="1" step="1" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td>';
+      tr.querySelector('.btn-remove-row').addEventListener('click', function () {
+        if (tbody.querySelectorAll('.item-row').length > 1) tr.remove();
+      });
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('itemsBody').addEventListener('click', function (e) {
+      if (e.target.classList.contains('btn-remove-row') && this.querySelectorAll('.item-row').length > 1) {
+        e.target.closest('tr').remove();
+      }
+    });
+
+    document.getElementById('orderForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msgEl = document.getElementById('formMessage');
+      msgEl.style.display = 'none';
+
+      const store = {
+        name: document.getElementById('storeName').value.trim(),
+        street: document.getElementById('storeStreet').value.trim() || undefined,
+        city: document.getElementById('storeCity').value.trim() || undefined,
+        region: document.getElementById('storeRegion').value.trim() || undefined,
+        postal_code: document.getElementById('storePostal').value.trim() || undefined,
+        country: document.getElementById('storeCountry').value.trim() || undefined
+      };
+      const cc_number = document.getElementById('ccNumber').value.replace(/\D/g, '');
+      if (cc_number.length < 13) {
+        msgEl.textContent = 'Enter a valid card number.';
+        msgEl.className = 'message error';
+        msgEl.style.display = 'block';
+        return;
+      }
+
+      const rows = document.querySelectorAll('#itemsBody .item-row');
+      const items = [];
+      for (const tr of rows) {
+        const inputs = tr.querySelectorAll('input');
+        const item = (inputs[0] && inputs[0].value.trim()) || '';
+        const quantity = parseInt(inputs[1] && inputs[1].value ? inputs[1].value : '1', 10);
+        const price = parseFloat(inputs[2] && inputs[2].value ? inputs[2].value : '0') || 0;
+        if (!item) continue;
+        items.push({ item, quantity: isNaN(quantity) ? 1 : quantity, price: isNaN(price) ? 0 : price });
+      }
+      if (items.length === 0) {
+        msgEl.textContent = 'Add at least one item.';
+        msgEl.className = 'message error';
+        msgEl.style.display = 'block';
+        return;
+      }
+
+      const body = { store, cc_number, items };
+      try {
+        const res = await fetch(API + '/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          let errMsg = 'Transaction failed.';
+          try { const err = JSON.parse(text); errMsg = err.message || errMsg; } catch { if (text) errMsg = text; }
+          msgEl.textContent = errMsg;
+          msgEl.className = 'message error';
+          msgEl.style.display = 'block';
+          return;
+        }
+        msgEl.textContent = 'Transaction created successfully.';
+        msgEl.className = 'message success';
+        msgEl.style.display = 'block';
+        document.getElementById('orderForm').reset();
+        document.getElementById('ccNumber').value = '';
+        const tbody = document.getElementById('itemsBody');
+        tbody.innerHTML = '';
+        tbody.innerHTML = '<tr class="item-row"><td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="quantity" placeholder="1" min="1" step="1" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td></tr>';
+      } catch (err) {
+        msgEl.textContent = 'Network error.';
+        msgEl.className = 'message error';
+        msgEl.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

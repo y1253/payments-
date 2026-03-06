@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-hover: #243044;
+      --border: #2d3a4d;
+      --text: #e6edf3;
+      --text-muted: #8b9cb3;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 24px; }
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    h1 { font-size: 1.35rem; font-weight: 600; color: var(--text); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    .pill.logged-in { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    button.logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-family: inherit;
+    }
+    button.logout:hover { background: var(--surface-hover); color: var(--text); }
+    .card-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .card-panel h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    label { font-size: 0.875rem; color: var(--text-muted); }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost {
+      background: var(--surface-hover);
+      color: var(--text);
+    }
+    .btn-ghost:hover { background: #2d3d52; }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .cc-card {
+      background: linear-gradient(145deg, var(--surface-hover) 0%, var(--surface) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .cc-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .cc-card .type { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .cc-card .last4 { font-size: 1.25rem; font-weight: 600; letter-spacing: 0.1em; }
+    .transactions-list { list-style: none; }
+    .transactions-list li {
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+    .transactions-list li:hover { background: var(--surface-hover); }
+    .transactions-list .date { font-size: 0.875rem; color: var(--text-muted); }
+    .transactions-list .store { font-weight: 500; }
+    .items-list {
+      list-style: none;
+      margin-top: 12px;
+      padding-left: 0;
+    }
+    .items-list li {
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: none;
+      cursor: default;
+    }
+    .items-list li:hover { background: var(--bg); }
+    .items-list .name { font-weight: 500; }
+    .items-list .qty { color: var(--text-muted); font-size: 0.875rem; }
+    .items-list .price { color: var(--success); font-weight: 500; }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 0.875rem;
+    }
+    .message.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+    .message.success { background: rgba(34, 197, 94, 0.15); color: #86efac; }
+    .message.info { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .digest-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9375rem;
+    }
+    .digest-row:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Payment Demo</h1>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span id="userPill" class="pill">Not logged in</span>
+        <button type="button" class="logout" id="logoutBtn" style="display: none;">Log out</button>
+      </div>
+    </header>
+
+    <!-- Login screen -->
+    <section id="loginScreen" class="screen active">
+      <div class="card-panel" style="max-width: 360px;">
+        <h2>Sign in</h2>
+        <form id="loginForm">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required placeholder="you@example.com" />
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required placeholder="••••••••" />
+          <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+        <p style="margin-top: 12px; font-size: 0.875rem; color: var(--text-muted);">
+          No account? <a href="#" id="showRegister" style="color: var(--accent);">Register</a>
+        </p>
+        <div id="loginMessage" class="message" style="display: none;"></div>
+      </div>
+      <div id="registerPanel" class="card-panel" style="max-width: 360px; display: none; margin-top: 16px;">
+        <h2>Create account</h2>
+        <form id="registerForm">
+          <label for="regFirst">First name</label>
+          <input type="text" id="regFirst" name="first_name" required />
+          <label for="regLast">Last name</label>
+          <input type="text" id="regLast" name="last_name" required />
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" name="email" required />
+          <label for="regPassword">Password</label>
+          <input type="password" id="regPassword" name="password" required />
+          <button type="submit" class="btn btn-primary">Create account</button>
+        </form>
+        <p style="margin-top: 12px; font-size: 0.875rem; color: var(--text-muted);">
+          Already have an account? <a href="#" id="showLogin">Sign in</a>
+        </p>
+        <div id="registerMessage" class="message" style="display: none;"></div>
+      </div>
+    </section>
+
+    <!-- Dashboard: cards + digests -->
+    <section id="dashboardScreen" class="screen">
+      <div class="card-panel">
+        <h2>Add credit card</h2>
+        <form id="addCardForm">
+          <label for="cardNumber">Card number</label>
+          <input type="text" id="cardNumber" name="cardNumber" placeholder="4111 1111 1111 1111" maxlength="19" />
+          <button type="submit" class="btn btn-primary">Add card</button>
+        </form>
+        <div id="addCardMessage" class="message" style="display: none;"></div>
+      </div>
+      <div class="card-panel" style="margin-top: 20px;">
+        <h2>Your cards</h2>
+        <p id="noCards" style="color: var(--text-muted); font-size: 0.9375rem; display: none;">No cards yet. Add one above.</p>
+        <div id="cardsGrid" class="cards-grid"></div>
+      </div>
+      <div class="card-panel" style="margin-top: 20px;">
+        <h2>Digest</h2>
+        <div id="digestContent">
+          <div class="digest-row"><span>Total cards</span><strong id="digestTotalCards">0</strong></div>
+          <div class="digest-row"><span>Card types</span><span id="digestTypes">—</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transactions for one card -->
+    <section id="transactionsScreen" class="screen">
+      <a href="#" class="back-link" id="backToCards">← Back to cards</a>
+      <div class="card-panel">
+        <h2>Transactions · •••• <span id="selectedLast4"></span></h2>
+        <p id="noTransactions" style="color: var(--text-muted); font-size: 0.9375rem; display: none;">No transactions for this card.</p>
+        <ul id="transactionsList" class="transactions-list"></ul>
+      </div>
+    </section>
+
+    <!-- Items for one transaction -->
+    <section id="itemsScreen" class="screen">
+      <a href="#" class="back-link" id="backToTransactions">← Back to transactions</a>
+      <div class="card-panel">
+        <h2>Transaction details</h2>
+        <p id="transactionMeta" style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 12px;"></p>
+        <ul id="itemsList" class="items-list"></ul>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const API = '';
+    const tokenStore = { get: () => localStorage.getItem('demo_token'), set: (t) => localStorage.setItem('demo_token', t), clear: () => localStorage.removeItem('demo_token') };
+
+    function headers(includeAuth = false) {
+      const h = { 'Content-Type': 'application/json' };
+      if (includeAuth && tokenStore.get()) h['x-token'] = tokenStore.get();
+      return h;
+    }
+
+    function parseTokenFromText(text) {
+      if (!text || !text.trim()) return null;
+      const t = text.trim();
+      try {
+        const data = JSON.parse(t);
+        if (typeof data === 'string') return data;
+        return data.accessToken || data.token || null;
+      } catch {
+        if (/^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(t)) return t;
+        return null;
+      }
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+    }
+
+    function showMessage(containerId, text, type = 'info') {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      el.textContent = text;
+      el.className = 'message ' + type;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    function updateUI() {
+      const token = tokenStore.get();
+      const pill = document.getElementById('userPill');
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (token) {
+        pill.textContent = 'Logged in';
+        pill.classList.add('logged-in');
+        logoutBtn.style.display = 'block';
+        showScreen('dashboardScreen');
+        loadCards();
+      } else {
+        pill.textContent = 'Not logged in';
+        pill.classList.remove('logged-in');
+        logoutBtn.style.display = 'none';
+        showScreen('loginScreen');
+      }
+    }
+
+    async function loadCards() {
+      const res = await fetch(API + '/cc', { headers: headers(true) });
+      if (!res.ok) { if (res.status === 401) { tokenStore.clear(); updateUI(); } return; }
+      const cards = await res.json();
+      const grid = document.getElementById('cardsGrid');
+      const noCards = document.getElementById('noCards');
+      grid.innerHTML = '';
+      noCards.style.display = Array.isArray(cards) && cards.length ? 'none' : 'block';
+      if (!Array.isArray(cards)) return;
+      const types = new Set();
+      cards.forEach(c => {
+        if (c.type) types.add(c.type);
+        const div = document.createElement('div');
+        div.className = 'cc-card';
+        div.innerHTML = '<div class="type">' + (c.type || 'Card') + '</div><div class="last4">•••• ' + (c.last_4 || '') + '</div>';
+        div.onclick = () => openTransactions(c.last_4);
+        grid.appendChild(div);
+      });
+      document.getElementById('digestTotalCards').textContent = cards.length;
+      document.getElementById('digestTypes').textContent = types.size ? [...types].join(', ') : '—';
+    }
+
+    let currentLast4 = '';
+    function openTransactions(last4) {
+      currentLast4 = last4;
+      document.getElementById('selectedLast4').textContent = last4;
+      showScreen('transactionsScreen');
+      loadTransactions(last4);
+    }
+
+    async function loadTransactions(last4) {
+      const res = await fetch(API + '/transactions/get', {
+        method: 'POST',
+        headers: headers(true),
+        body: JSON.stringify({ last_4: last4 })
+      });
+      const listEl = document.getElementById('transactionsList');
+      const noTx = document.getElementById('noTransactions');
+      listEl.innerHTML = '';
+      if (!res.ok) { noTx.style.display = 'block'; noTx.textContent = 'Could not load transactions.'; return; }
+      const data = await res.json();
+      noTx.style.display = 'block';
+      noTx.textContent = 'No transactions for this card.';
+      if (data && Array.isArray(data) && data.length) {
+        noTx.style.display = 'none';
+        data.forEach(tx => {
+          const li = document.createElement('li');
+          const date = tx.create_at ? new Date(tx.create_at).toLocaleString() : '—';
+          const storeLabel = getStoreLabel(tx);
+          li.innerHTML = '<span class="store">' + storeLabel + '</span><span class="date">' + date + '</span>';
+          li.onclick = () => openItems(tx);
+          listEl.appendChild(li);
+        });
+      }
+    }
+
+    function getStoreLabel(tx) {
+      const s = tx.store || tx.Store;
+      if (!s) return 'Store #' + (tx.store_id || '');
+      const name = s.name || s.Name || '';
+      const city = s.city || s.City || '';
+      const parts = [name, city].filter(Boolean);
+      return parts.length ? parts.join(', ') : ('Store #' + (tx.store_id || ''));
+    }
+
+    function openItems(transaction) {
+      window._lastTransaction = transaction;
+      const meta = document.getElementById('transactionMeta');
+      const storeLabel = getStoreLabel(transaction);
+      meta.textContent = storeLabel + ' · ' + (transaction.create_at ? new Date(transaction.create_at).toLocaleString() : '');
+      const list = document.getElementById('itemsList');
+      list.innerHTML = '';
+      const items = transaction.items || [];
+      items.forEach(it => {
+        const li = document.createElement('li');
+        li.innerHTML = '<span class="name">' + (it.item || '—') + '</span><span class="qty">×' + (it.quantity ?? '') + '</span><span class="price">$' + (it.price ?? '0') + '</span>';
+        list.appendChild(li);
+      });
+      showScreen('itemsScreen');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      try {
+        const res = await fetch(API + '/users/login', {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({ email, password })
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          try { const err = JSON.parse(text); showMessage('loginMessage', err.message || 'Login failed', 'error'); } catch { showMessage('loginMessage', 'Login failed', 'error'); }
+          return;
+        }
+        const token = parseTokenFromText(text);
+        if (token) {
+          tokenStore.set(token);
+          updateUI();
+        } else {
+          showMessage('loginMessage', 'Invalid response', 'error');
+        }
+      } catch (err) {
+        showMessage('loginMessage', 'Network error', 'error');
+      }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        first_name: document.getElementById('regFirst').value.trim(),
+        last_name: document.getElementById('regLast').value.trim(),
+        email: document.getElementById('regEmail').value.trim(),
+        password: document.getElementById('regPassword').value
+      };
+      try {
+        const res = await fetch(API + '/users/create', {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify(body)
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          try { const err = JSON.parse(text); showMessage('registerMessage', err.message || 'Registration failed', 'error'); } catch { showMessage('registerMessage', 'Registration failed', 'error'); }
+          return;
+        }
+        const token = parseTokenFromText(text);
+        if (token) {
+          tokenStore.set(token);
+          updateUI();
+        } else {
+          showMessage('registerMessage', 'Account created. Please sign in.', 'success');
+        }
+      } catch (err) {
+        showMessage('registerMessage', 'Network error', 'error');
+      }
+    });
+
+    document.getElementById('addCardForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const raw = document.getElementById('cardNumber').value.replace(/\D/g, '');
+      if (raw.length < 13) {
+        showMessage('addCardMessage', 'Enter a valid card number', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(API + '/cc', {
+          method: 'POST',
+          headers: headers(true),
+          body: JSON.stringify({ cardNumber: raw })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showMessage('addCardMessage', data?.message || 'Failed to add card', 'error');
+          return;
+        }
+        showMessage('addCardMessage', 'Card added.', 'success');
+        document.getElementById('cardNumber').value = '';
+        loadCards();
+      } catch (err) {
+        showMessage('addCardMessage', 'Network error', 'error');
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      tokenStore.clear();
+      updateUI();
+    });
+
+    document.getElementById('showRegister').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('registerPanel').style.display = 'block';
+      document.getElementById('loginMessage').style.display = 'none';
+    });
+    document.getElementById('showLogin').addEventListener('click', (e) => {
+      e.preventDefault();
+      document.getElementById('registerPanel').style.display = 'none';
+    });
+
+    document.getElementById('backToCards').addEventListener('click', (e) => {
+      e.preventDefault();
+      showScreen('dashboardScreen');
+      loadCards();
+    });
+    document.getElementById('backToTransactions').addEventListener('click', (e) => {
+      e.preventDefault();
+      showScreen('transactionsScreen');
+      if (currentLast4) loadTransactions(currentLast4);
+    });
+
+    document.getElementById('cardNumber').addEventListener('input', function () {
+      let v = this.value.replace(/\D/g, '');
+      const parts = [];
+      for (let i = 0; i < v.length && i < 16; i += 4) parts.push(v.slice(i, i + 4));
+      this.value = parts.join(' ').trim();
+    });
+
+    if (tokenStore.get()) updateUI();
+    else showScreen('loginScreen');
+  </script>
+</body>
+</html>
