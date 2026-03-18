@@ -17,9 +17,8 @@ export class TransactionsController {
         return await this.transactionService.getTransactionByCard(user.user_id,last4)
     }
     @Post()
-     @UseGuards(AuthGuard)
-     postTransaction(@User() user: any, @Body() transaction : any){
-        return this.transactionService.postTransaction(user.user_id, transaction)
+    postTransaction(@Body() transaction: any){
+        return this.transactionService.postTransaction(transaction);
     }
 
 

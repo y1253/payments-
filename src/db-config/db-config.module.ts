@@ -9,6 +9,7 @@ import { Rule } from '../rule/rule.entity';
 import { Type } from '../type/type.entity';
 import { ItemTypes } from '../item-types/item-types.entity';
 import { CustomTypes } from '../custom-types/custom-types.entity';
+import { RawItem } from '../raw-items/raw-item.entity';
 
 @Module({
     imports:[
@@ -23,9 +24,9 @@ import { CustomTypes } from '../custom-types/custom-types.entity';
       // Prevent TypeORM from altering the existing Workbench schema at runtime.
       // Your DB may contain rows that violate FK constraints during schema sync,
       // which causes app startup to fail.
-      synchronize: false,
+      synchronize: true,
       autoLoadEntities:true,
-      entities:[User,Cc,Transaction,Item,Store,Rule,Type,ItemTypes,CustomTypes]
+      entities:[User,Transaction,Cc,Item,Store,Rule,Type,ItemTypes,CustomTypes,RawItem]
       
     }),
    

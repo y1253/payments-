@@ -9,10 +9,19 @@ import { UsersModule } from './users/users.module';
 import { CcModule } from './cc/cc.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { StoreModule } from './store/store.module';
+import { AiModule } from './ai/ai.module';
 
 
 @Module({
-  imports: [DbConfigModule,ConfigModule.forRoot({isGlobal: true,}),UsersModule, CcModule, TransactionsModule, StoreModule],
+  imports: [
+    DbConfigModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+    UsersModule,
+    CcModule,
+    TransactionsModule,
+    StoreModule,
+    AiModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
