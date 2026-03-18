@@ -36,9 +36,6 @@ export class ItemDto {
   @IsString()
   item!: string; 
 
-   @IsNumber()
-   quantity!: number; 
-
   @IsNumber()
   price!: number;
 

@@ -148,7 +148,6 @@
           <thead>
             <tr>
               <th class="col-item">Item</th>
-              <th class="col-qty">Qty</th>
               <th class="col-price">Price</th>
               <th class="col-actions"></th>
             </tr>
@@ -156,7 +155,6 @@
           <tbody id="itemsBody">
             <tr class="item-row">
               <td><input type="text" name="item" placeholder="Product name" required /></td>
-              <td><input type="number" name="quantity" placeholder="1" min="1" step="1" required /></td>
               <td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td>
               <td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td>
             </tr>
@@ -172,6 +170,29 @@
 
   <script>
     const API = '';
+    const tokenStore = {
+      get: () => localStorage.getItem('demo_token'),
+      set: (t) => localStorage.setItem('demo_token', t),
+      clear: () => localStorage.removeItem('demo_token')
+    };
+
+    function headers(includeAuth = false) {
+      const h = { 'Content-Type': 'application/json' };
+      if (includeAuth && tokenStore.get()) h['x-token'] = tokenStore.get();
+      return h;
+    }
+
+    function requireToken() {
+      const token = tokenStore.get();
+      if (!token) {
+        const msgEl = document.getElementById('formMessage');
+        msgEl.textContent = 'Please login first (open /).';
+        msgEl.className = 'message error';
+        msgEl.style.display = 'block';
+        return null;
+      }
+      return token;
+    }
 
     document.getElementById('ccNumber').addEventListener('input', function () {
       let v = this.value.replace(/\D/g, '');
@@ -184,7 +205,7 @@
       const tbody = document.getElementById('itemsBody');
       const tr = document.createElement('tr');
       tr.className = 'item-row';
-      tr.innerHTML = '<td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="quantity" placeholder="1" min="1" step="1" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td>';
+      tr.innerHTML = '<td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td>';
       tr.querySelector('.btn-remove-row').addEventListener('click', function () {
         if (tbody.querySelectorAll('.item-row').length > 1) tr.remove();
       });
@@ -201,6 +222,8 @@
       e.preventDefault();
       const msgEl = document.getElementById('formMessage');
       msgEl.style.display = 'none';
+
+      if (!requireToken()) return;
 
       const store = {
         name: document.getElementById('storeName').value.trim(),
@@ -223,10 +246,9 @@
       for (const tr of rows) {
         const inputs = tr.querySelectorAll('input');
         const item = (inputs[0] && inputs[0].value.trim()) || '';
-        const quantity = parseInt(inputs[1] && inputs[1].value ? inputs[1].value : '1', 10);
-        const price = parseFloat(inputs[2] && inputs[2].value ? inputs[2].value : '0') || 0;
+        const price = parseFloat(inputs[1] && inputs[1].value ? inputs[1].value : '0') || 0;
         if (!item) continue;
-        items.push({ item, quantity: isNaN(quantity) ? 1 : quantity, price: isNaN(price) ? 0 : price });
+        items.push({ item, price: isNaN(price) ? 0 : price });
       }
       if (items.length === 0) {
         msgEl.textContent = 'Add at least one item.';
@@ -239,7 +261,7 @@
       try {
         const res = await fetch(API + '/transactions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers(true),
           body: JSON.stringify(body)
         });
         const text = await res.text();
@@ -258,7 +280,7 @@
         document.getElementById('ccNumber').value = '';
         const tbody = document.getElementById('itemsBody');
         tbody.innerHTML = '';
-        tbody.innerHTML = '<tr class="item-row"><td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="quantity" placeholder="1" min="1" step="1" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td></tr>';
+        tbody.innerHTML = '<tr class="item-row"><td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td></tr>';
       } catch (err) {
         msgEl.textContent = 'Network error.';
         msgEl.className = 'message error';

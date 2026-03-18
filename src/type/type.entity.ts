@@ -6,8 +6,8 @@ import {
   Column,
   OneToMany,
 } from 'typeorm';
-import { Item } from '../transactions/item.entity';
 import {  Rule } from '../rule/rule.entity';
+import { ItemTypes } from '../item-types/item-types.entity';
 
 @Entity('type')
 export class Type {
@@ -17,8 +17,8 @@ export class Type {
   @Column({ length: 145 })
   type!: string;
 
-  @OneToMany(() => Item, (item) => item.itemType)
-  items!: Item[];
+  @OneToMany(() => ItemTypes, (itemTypes) => itemTypes.type)
+  itemTypes!: ItemTypes[];
 
   @OneToMany(() => Rule, (role) => role.roleType)
   roles!: Rule[];

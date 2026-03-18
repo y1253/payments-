@@ -24,7 +24,8 @@ export class Cc {
   type!: string;
 
   // The encrypted card number (AES-256 encrypted)
-  @Column({ name: 'encrypted_number', length: 512, nullable: true })
+  // Workbench schema stores this encrypted value in column `number`
+  @Column({ name: 'number', length: 512, nullable: true })
   encrypted_number!: string;
 
   // Deterministic hash for fast lookups — INDEXED

@@ -71,6 +71,13 @@ export class CcService {
    return await  this.ccRepo.findOneBy({hash:cc})
   }
 
+  async getCcByNumberForUser(ccHash: string, user_id: number) {
+    return await this.ccRepo.findOneBy({
+      hash: ccHash,
+      user_id,
+    });
+  }
+
   async getCcByLast4(last_4:string,user_id:number){
     return await this.ccRepo.findOneBy({
       user_id,last_4

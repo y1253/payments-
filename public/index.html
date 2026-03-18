@@ -419,7 +419,7 @@
       const items = transaction.items || [];
       items.forEach(it => {
         const li = document.createElement('li');
-        li.innerHTML = '<span class="name">' + (it.item || '—') + '</span><span class="qty">×' + (it.quantity ?? '') + '</span><span class="price">$' + (it.price ?? '0') + '</span>';
+        li.innerHTML = '<span class="name">' + (it.item || '—') + '</span><span class="price">$' + (it.price ?? '0') + '</span>';
         list.appendChild(li);
       });
       showScreen('itemsScreen');

@@ -8,7 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Transaction } from './transactions.entity';
-import { Type } from '../type/type.entity';
+import { ItemTypes } from '../item-types/item-types.entity';
 
 @Entity('item')
 export class Item {
@@ -18,14 +18,8 @@ export class Item {
   @Column()
   transaction_id!: number;
 
-  @Column({ nullable: true })
-  type_id!: number;
-
   @Column({ length: 345, nullable: true })
   item!: string;
-
-  @Column({  nullable: true })
-  quantity!: number;
 
   @Column('decimal', { precision: 9, scale: 2 })
   price!: number;
@@ -34,7 +28,7 @@ export class Item {
   @JoinColumn({ name: 'transaction_id' })
   transaction!: Transaction;
 
-  @ManyToOne(() => Type, (type) => type.items, { nullable: true })
-  @JoinColumn({ name: 'type_id' })
-  itemType!: Type;
+  @ManyToOne(() => ItemTypes, (itemTypes) => itemTypes.items, { nullable: true })
+  @JoinColumn({ name: 'item_types_id' })
+  itemType?: ItemTypes;
 }

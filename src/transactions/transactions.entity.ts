@@ -13,7 +13,7 @@ import { Cc } from '../cc/cc.entity';
 import { Store } from '../store/store.entity';
 import { Item } from './item.entity';
 
-@Entity('transactions')
+@Entity('transaction')
 export class Transaction {
   @PrimaryGeneratedColumn()
   transaction_id!: number;

@@ -8,9 +8,11 @@ import { Item } from './item.entity';
 import { Store } from '../store/store.entity';
 import { StoreModule } from '../store/store.module';
 import { AuthModule } from '../auth/auth.module';
+import { ItemTypes } from '../item-types/item-types.entity';
+import { Type } from '../type/type.entity';
 
 @Module({
-    imports:[TypeOrmModule.forFeature([Store,Item,Transaction]),CcModule,StoreModule,AuthModule],
+    imports:[TypeOrmModule.forFeature([Store,Item,Transaction,ItemTypes,Type]),CcModule,StoreModule,AuthModule],
     controllers:[TransactionsController],
     providers:[TransactionsService]
 })

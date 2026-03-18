@@ -7,6 +7,8 @@ import { Item } from '../transactions/item.entity';
 import { Store } from '../store/store.entity';
 import { Rule } from '../rule/rule.entity';
 import { Type } from '../type/type.entity';
+import { ItemTypes } from '../item-types/item-types.entity';
+import { CustomTypes } from '../custom-types/custom-types.entity';
 
 @Module({
     imports:[
@@ -20,7 +22,7 @@ import { Type } from '../type/type.entity';
       database: 'payments',
       synchronize: true,
       autoLoadEntities:true,
-      entities:[User,Cc,Transaction,Item,Store,Rule,Type]
+      entities:[User,Cc,Transaction,Item,Store,Rule,Type,ItemTypes,CustomTypes]
       
     }),
    
