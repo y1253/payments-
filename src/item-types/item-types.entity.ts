@@ -23,8 +23,10 @@ export class ItemTypes {
   type!: Type;
 
   // optional item name stored per type (nullable in schema)
-  @Column({ name: 'item', length: 245, nullable: true })
-  item!: string | null;
+  // Note: keep property type as `string` (not `string | null`), otherwise
+  // TypeORM may detect it as a generic Object column type.
+  @Column({ name: 'item', type: 'varchar', length: 245, nullable: true })
+  item!: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   created_at!: Date;

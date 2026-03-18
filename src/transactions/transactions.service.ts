@@ -56,7 +56,7 @@ export class TransactionsService {
             cc_id: savedCc.cc_id
         })
 
-        const { transaction_id } = await this.transactionRepo.save(newTransaction)
+        const savedTransaction = await this.transactionRepo.save(newTransaction)
 
         for (const itemDto of transaction.items) {
             const itemTypes = await this.getOrCreateItemTypes(itemDto.item);
@@ -64,7 +64,9 @@ export class TransactionsService {
             const newItem = this.itemRepo.create({
                 item: itemDto.item,
                 price: itemDto.price,
-                transaction_id,
+                // Item entity uses the `transaction` relation to set `transaction_id`
+                transaction_id: savedTransaction.transaction_id,
+                transaction: savedTransaction,
                 itemType: itemTypes,
             });
 
