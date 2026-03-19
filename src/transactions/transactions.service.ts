@@ -7,6 +7,7 @@ import { Transaction } from './transactions.entity';
 import { CcService } from '../cc/cc.service';
 import { StoreService } from '../store/store.service';
 import { ItemTypes } from '../item-types/item-types.entity';
+import { Type } from '../type/type.entity';
 import { RawItem } from '../raw-items/raw-item.entity';
 import { AiService, ItemTypeCandidate, AssigningResult } from '../ai/ai.service';
 
@@ -25,6 +26,9 @@ export class TransactionsService {
         @InjectRepository(ItemTypes)
         private readonly itemTypesRepo: Repository<ItemTypes>,
 
+        @InjectRepository(Type)
+        private readonly typeRepo: Repository<Type>,
+
         @InjectRepository(RawItem)
         private readonly rawItemRepo: Repository<RawItem>,
 
@@ -38,7 +42,7 @@ export class TransactionsService {
         if (!savedCC) throw new NotFoundException('CC not found');
         const transactions = await this.transactionRepo.find({
             where: { cc_id: savedCC.cc_id },
-            relations: ['items', 'store']
+            relations: ['items', 'items.itemType', 'items.itemType.type', 'store'],
         })
         return transactions
 
@@ -66,8 +70,9 @@ export class TransactionsService {
             );
 
             const newItem = this.itemRepo.create({
-                // store the normalized/canonical name in `item` column
-                item: resolved.itemName,
+                // store the raw user-provided item text in `item` column
+                // normalized/canonical name will be read from `itemType.item`
+                item: itemDto.item,
                 price: itemDto.price,
                 // Item entity uses the `transaction` relation to set `transaction_id`
                 transaction_id: savedTransaction.transaction_id,
@@ -178,9 +183,43 @@ export class TransactionsService {
             }));
 
         if (!candidates.length) {
-            throw new NotFoundException(
-                'No item_types candidates found. Create at least one item_types row first.',
-            );
+            // If there is no info in `item_types`, normalize/classify the raw
+            // input using AI and create the needed `type` + `item_types` rows.
+            const normalized = await this.aiService.normalize(rawItemText, 1);
+            const typeId = await this.getOrCreateTypeId(normalized.type);
+
+            const existingItemType = await this.itemTypesRepo.findOneBy({
+                type_id: typeId,
+                item: normalized.item,
+            });
+
+            const savedItemTypes = existingItemType
+                ? existingItemType
+                : await this.itemTypesRepo.save(
+                    this.itemTypesRepo.create({
+                        item: normalized.item,
+                        type_id: typeId,
+                    }),
+                );
+
+            const existingRaw = await this.rawItemRepo.findOneBy({
+                item: rawItemText,
+                item_types_id: savedItemTypes.item_types_id,
+            });
+
+            if (!existingRaw) {
+                await this.rawItemRepo.save(
+                    this.rawItemRepo.create({
+                        item: rawItemText,
+                        item_types_id: savedItemTypes.item_types_id,
+                    }),
+                );
+            }
+
+            return {
+                itemTypesId: savedItemTypes.item_types_id,
+                itemName: savedItemTypes.item ?? normalized.item,
+            };
         }
 
         const result: AssigningResult = await this.aiService.assigning(
@@ -217,7 +256,7 @@ export class TransactionsService {
 
         // Step 3B: AI returned a new summary -> create item_types + raw_item
         this.logger.log(`AI fallback produced new item_types for "${rawItemText}"`);
-        const typeId = result.type; // assumption: DB uses 1=personal, 2=business in `item_types.type_id`
+        const typeId = await this.getOrCreateTypeId(result.type);
 
         const existingItemType = await this.itemTypesRepo.findOneBy({
             type_id: typeId,
@@ -252,5 +291,21 @@ export class TransactionsService {
             itemTypesId: savedItemTypes.item_types_id,
             itemName: result.item,
         };
+    }
+
+    private outputTypeToLabel(outputType: 1 | 2): string {
+        // DB expects readable labels (PERSONAL / BUSINESS).
+        return outputType === 1 ? 'PERSONAL' : 'BUSINESS';
+    }
+
+    private async getOrCreateTypeId(outputType: 1 | 2): Promise<number> {
+        const typeLabel = this.outputTypeToLabel(outputType);
+        const existing = await this.typeRepo.findOneBy({ type: typeLabel });
+        if (existing) return existing.type_id;
+
+        const created = await this.typeRepo.save(
+            this.typeRepo.create({ type: typeLabel }),
+        );
+        return created.type_id;
     }
 }

@@ -164,8 +164,11 @@
     }
     .items-list li:hover { background: var(--bg); }
     .items-list .name { font-weight: 500; }
-    .items-list .qty { color: var(--text-muted); font-size: 0.875rem; }
     .items-list .price { color: var(--success); font-weight: 500; }
+    .items-list { }
+    .items-list .item-left { display: flex; flex-direction: column; gap: 4px; }
+    .items-list .normalized { color: var(--text-muted); font-size: 0.875rem; }
+    .items-list .type-label { color: var(--accent); font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .back-link {
       display: inline-block;
       margin-bottom: 16px;
@@ -419,7 +422,16 @@
       const items = transaction.items || [];
       items.forEach(it => {
         const li = document.createElement('li');
-        li.innerHTML = '<span class="name">' + (it.item || '—') + '</span><span class="price">$' + (it.price ?? '0') + '</span>';
+        const inputName = it.item || '—';
+        const normalizedName = it.itemType ? (it.itemType.item || '—') : '—';
+        const typeValue = it.itemType && it.itemType.type ? it.itemType.type.type : '—';
+        li.innerHTML =
+          '<div class="item-left">' +
+          '<span class="name">Input: ' + inputName + '</span>' +
+          '<span class="normalized">Normalized: ' + normalizedName + '</span>' +
+          '<span class="type-label">Type: ' + typeValue + '</span>' +
+          '</div>' +
+          '<span class="price">$' + (it.price ?? '0') + '</span>';
         list.appendChild(li);
       });
       showScreen('itemsScreen');

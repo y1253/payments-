@@ -104,7 +104,7 @@ export class AiService {
       temperature: 0.2,
       messages: [
         {
-          role: 'developer',
+          role: 'system',
           content:
             'You normalize item/product names. Return ONLY valid JSON with keys { "item": string, "type": 1|2 }.',
         },
