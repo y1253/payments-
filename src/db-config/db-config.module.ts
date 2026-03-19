@@ -12,8 +12,8 @@ import { CustomTypes } from '../custom-types/custom-types.entity';
 import { RawItem } from '../raw-items/raw-item.entity';
 
 @Module({
-    imports:[
-        TypeOrmModule.forRoot({     
+  imports: [
+    TypeOrmModule.forRoot({
       type: 'mysql',
       driver: require('mysql2'),
       host: 'localhost',
@@ -24,13 +24,13 @@ import { RawItem } from '../raw-items/raw-item.entity';
       // Prevent TypeORM from altering the existing Workbench schema at runtime.
       // Your DB may contain rows that violate FK constraints during schema sync,
       // which causes app startup to fail.
-      synchronize: false,
-      autoLoadEntities:true,
-      entities:[User,Transaction,Cc,Item,Store,Rule,Type,ItemTypes,CustomTypes,RawItem]
-      
+      synchronize: true,
+      autoLoadEntities: true,
+      entities: [User, Transaction, Cc, Item, Store, Rule, Type, ItemTypes, CustomTypes, RawItem]
+
     }),
-   
-    ],
-     exports:[TypeOrmModule]
+
+  ],
+  exports: [TypeOrmModule]
 })
-export class DbConfigModule {}
+export class DbConfigModule { }
