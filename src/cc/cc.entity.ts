@@ -20,11 +20,8 @@ export class Cc {
   @Column({ name: 'user_id' })
   user_id!: number;
 
-  @Column({ name: 'type', length: 32, nullable: true })
-  type!: string;
-
   // The encrypted card number (AES-256 encrypted)
-  // Workbench schema stores this encrypted value in column `number`
+  // Modal schema stores this encrypted value in column `number`
   @Column({ name: 'number', length: 512, nullable: true })
   encrypted_number!: string;
 

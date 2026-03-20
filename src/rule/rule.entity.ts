@@ -1,5 +1,3 @@
-// src/role/role.entity.ts
-
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -11,18 +9,18 @@ import { Store } from '../store/store.entity';
 import { Type } from '../type/type.entity';
 import { User } from '../users/users.entity';
 
-@Entity('rule')
-export class Rule {
-  @PrimaryGeneratedColumn()
-  rule_id!: number;
+@Entity('role')
+export class Role {
+  @PrimaryGeneratedColumn({ name: 'role_id' })
+  role_id!: number;
 
-  @Column()
+  @Column({ name: 'store_id', type: 'int' })
   store_id!: number;
 
-  @Column()
+  @Column({ name: 'type_id', type: 'int' })
   type_id!: number;
 
-  @Column()
+  @Column({ name: 'user_id', type: 'int' })
   user_id!: number;
 
   @ManyToOne(() => Store, (store) => store.roles)

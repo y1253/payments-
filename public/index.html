@@ -256,6 +256,17 @@
         </form>
         <div id="addCardMessage" class="message" style="display: none;"></div>
       </div>
+
+      <div class="card-panel" style="margin-top: 20px;">
+        <h2>Add category</h2>
+        <form id="addCategoryForm">
+          <label for="categoryName">Category name</label>
+          <input type="text" id="categoryName" name="categoryName" placeholder="Food, Rent, Uber..." required />
+          <button type="submit" class="btn btn-primary">Add category</button>
+        </form>
+        <div id="addCategoryMessage" class="message" style="display: none;"></div>
+      </div>
+
       <div class="card-panel" style="margin-top: 20px;">
         <h2>Your cards</h2>
         <p id="noCards" style="color: var(--text-muted); font-size: 0.9375rem; display: none;">No cards yet. Add one above.</p>
@@ -423,12 +434,12 @@
       items.forEach(it => {
         const li = document.createElement('li');
         const inputName = it.item || '—';
-        const normalizedName = it.itemType ? (it.itemType.item || '—') : '—';
-        const typeValue = it.itemType && it.itemType.type ? it.itemType.type.type : '—';
+        const typeValue = it.type && it.type.type ? it.type.type : '—';
+        const categoryValue = it.category && it.category.category ? it.category.category : '—';
         li.innerHTML =
           '<div class="item-left">' +
-          '<span class="name">Input: ' + inputName + '</span>' +
-          '<span class="normalized">Normalized: ' + normalizedName + '</span>' +
+          '<span class="name">Item: ' + inputName + '</span>' +
+          '<span class="normalized">Category: ' + categoryValue + '</span>' +
           '<span class="type-label">Type: ' + typeValue + '</span>' +
           '</div>' +
           '<span class="price">$' + (it.price ?? '0') + '</span>';
@@ -518,6 +529,31 @@
         loadCards();
       } catch (err) {
         showMessage('addCardMessage', 'Network error', 'error');
+      }
+    });
+
+    document.getElementById('addCategoryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const categoryName = document.getElementById('categoryName').value.trim();
+      if (!categoryName) {
+        showMessage('addCategoryMessage', 'Enter a category name', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(API + '/category', {
+          method: 'POST',
+          headers: headers(true),
+          body: JSON.stringify({ category: categoryName })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showMessage('addCategoryMessage', data?.message || 'Failed to add category', 'error');
+          return;
+        }
+        showMessage('addCategoryMessage', 'Category added.', 'success');
+        document.getElementById('categoryName').value = '';
+      } catch (err) {
+        showMessage('addCategoryMessage', 'Network error', 'error');
       }
     });
 

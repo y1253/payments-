@@ -8,7 +8,8 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Cc } from '../cc/cc.entity';
-import {  Rule } from '../rule/rule.entity';
+import { Role } from '../rule/rule.entity';
+import { Category } from '../category/category.entity';
 
 @Entity('user')
 export class User {
@@ -36,7 +37,9 @@ export class User {
   @OneToMany(() => Cc, (cc) => cc.user)
   cards!: Cc[];
 
-  // Add to your User entity:
-@OneToMany(() => Rule, (role) => role.user)
-roles!: Rule[];
+  @OneToMany(() => Role, (role) => role.user)
+  roles!: Role[];
+
+  @OneToMany(() => Category, (category) => category.user)
+  categories!: Category[];
 }

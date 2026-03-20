@@ -7,7 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Transaction } from '../transactions/transactions.entity';
-import { Rule } from '../rule/rule.entity';
+import { Role } from '../rule/rule.entity';
 
 @Entity('store')
 export class Store {
@@ -35,6 +35,6 @@ export class Store {
   @OneToMany(() => Transaction, (transaction) => transaction.store)
   transactions!: Transaction[];
 
-  @OneToMany(() => Rule, (rule) => rule.store)
-  roles!: Rule[];
+  @OneToMany(() => Role, (role) => role.store)
+  roles!: Role[];
 }

@@ -18,22 +18,6 @@ export class CcService {
       .digest('hex');
   }
 
-  private detectCardType(cc: string): string {
-    const sanitized = cc.replace(/\D/g, '');
-
-    // Visa: starts with 4, length 13,16,19
-    if (/^4\d{12}(\d{3})?(\d{3})?$/.test(sanitized)) {
-      return 'VISA';
-    }
-
-    // American Express: starts with 34 or 37, length 15
-    if (/^3[47]\d{13}$/.test(sanitized)) {
-      return 'AMERICAN_EXPRESS';
-    }
-
-    return 'UNKNOWN';
-  }
-
   // Different output every time. For storage.
   private encryptCC(cc: string): string {
     const key = Buffer.from(process.env.CC_ENCRYPT_KEY as string, 'hex'); // 32 bytes
@@ -47,7 +31,7 @@ export class CcService {
 
   getCards(user_id: number) {
     return this.ccRepo.find({
-        select:['last_4','type'],
+        select:['last_4'],
       where: { user_id },
     });
   }
@@ -61,7 +45,6 @@ export class CcService {
       hash: this.hashCC(cc),
       encrypted_number: this.encryptCC(cc),
       last_4: cc.slice(-4),
-      type: this.detectCardType(cc),
     });
 
     return await  this.ccRepo.save(card);

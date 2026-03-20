@@ -6,10 +6,9 @@ import { Item } from './item.entity';
 import { Transaction } from './transactions.entity';
 import { CcService } from '../cc/cc.service';
 import { StoreService } from '../store/store.service';
-import { ItemTypes } from '../item-types/item-types.entity';
 import { Type } from '../type/type.entity';
-import { RawItem } from '../raw-items/raw-item.entity';
-import { AiService, ItemTypeCandidate, AssigningResult } from '../ai/ai.service';
+import { Category } from '../category/category.entity';
+import { AiService } from '../ai/ai.service';
 
 
 @Injectable()
@@ -23,14 +22,11 @@ export class TransactionsService {
         @InjectRepository(Transaction)
         private readonly transactionRepo: Repository<Transaction>,
 
-        @InjectRepository(ItemTypes)
-        private readonly itemTypesRepo: Repository<ItemTypes>,
-
         @InjectRepository(Type)
         private readonly typeRepo: Repository<Type>,
 
-        @InjectRepository(RawItem)
-        private readonly rawItemRepo: Repository<RawItem>,
+        @InjectRepository(Category)
+        private readonly categoryRepo: Repository<Category>,
 
         private readonly ccService: CcService,
         private readonly storeService: StoreService,
@@ -42,7 +38,7 @@ export class TransactionsService {
         if (!savedCC) throw new NotFoundException('CC not found');
         const transactions = await this.transactionRepo.find({
             where: { cc_id: savedCC.cc_id },
-            relations: ['items', 'items.itemType', 'items.itemType.type', 'store'],
+            relations: ['items', 'items.category', 'items.type', 'store'],
         })
         return transactions
 
@@ -63,23 +59,45 @@ export class TransactionsService {
 
         const savedTransaction = await this.transactionRepo.save(newTransaction)
 
+        // Business only (type_id=2). No AI for type.
+        const businessTypeId = await this.getOrCreateTypeId(2);
+
+        // Get user's categories for AI assignment.
+        let userCategories = await this.categoryRepo.find({
+            where: { user_id: savedCc.user_id },
+        });
+
+        // If user has no categories, create a default one.
+        if (!userCategories.length) {
+            const created = await this.categoryRepo.save(
+                this.categoryRepo.create({
+                    user_id: savedCc.user_id,
+                    category: 'Uncategorized',
+                }),
+            );
+            userCategories = [created];
+        }
+
+        const categoriesForAi = userCategories.map((c) => ({
+            category_id: c.category_id,
+            category: c.category,
+        }));
+
         for (const itemDto of transaction.items) {
-            const resolved = await this.resolveItemTypesForRawItem(itemDto.item);
-            this.logger.log(
-                `Resolved item "${itemDto.item}" -> item_types_id=${resolved.itemTypesId}, item="${resolved.itemName}"`,
+            // AI chooses the best category_id from THIS user's category list.
+            const categoryId = await this.aiService.assignCategoryId(
+                itemDto.item,
+                categoriesForAi,
             );
 
             const newItem = this.itemRepo.create({
-                // store the raw user-provided item text in `item` column
-                // normalized/canonical name will be read from `itemType.item`
                 item: itemDto.item,
                 price: itemDto.price,
-                // Item entity uses the `transaction` relation to set `transaction_id`
                 transaction_id: savedTransaction.transaction_id,
                 transaction: savedTransaction,
-                itemType: this.itemTypesRepo.create({
-                    item_types_id: resolved.itemTypesId,
-                } as ItemTypes),
+                type_id: businessTypeId,
+                user_id: savedCc.user_id,
+                category_id: categoryId,
             });
 
             await this.itemRepo.save(newItem);
@@ -87,210 +105,6 @@ export class TransactionsService {
 
 
 
-    }
-
-    private cosineSimilarity(a: number[], b: number[]): number {
-        if (a.length !== b.length) {
-            throw new BadRequestException('Embedding vectors must have same length');
-        }
-
-        let dot = 0;
-        let normA = 0;
-        let normB = 0;
-
-        for (let i = 0; i < a.length; i++) {
-            dot += a[i] * b[i];
-            normA += a[i] * a[i];
-            normB += b[i] * b[i];
-        }
-
-        const denom = Math.sqrt(normA) * Math.sqrt(normB);
-        return denom === 0 ? 0 : dot / denom;
-    }
-
-    private resolveMatchThreshold(): number {
-        return parseFloat(process.env.OPENAI_MATCH_THRESHOLD ?? '0.82');
-    }
-
-    private async matchRawItemByExactOrEmbedding(item: string): Promise<RawItem | null> {
-        const input = (item ?? '').trim();
-        if (!input) return null;
-
-        // 1) Exact match (fast path)
-        const exact = await this.rawItemRepo.findOneBy({ item: input });
-        if (exact) return exact;
-
-        // 2) Embedding-based match (handles typos/near variants)
-        const candidates = await this.rawItemRepo.find({
-            select: ['raw_item_id', 'item', 'item_types_id'],
-        });
-
-        if (!candidates.length) return null;
-
-        const inputEmbedding = await this.aiService.embedText(input);
-        let bestScore = -Infinity;
-        let best: RawItem | null = null;
-
-        const threshold = this.resolveMatchThreshold();
-        for (const c of candidates) {
-            const text = (c.item ?? '').trim();
-            if (!text) continue;
-            const candEmbedding = await this.aiService.embedText(text);
-            const score = this.cosineSimilarity(inputEmbedding, candEmbedding);
-            if (score > bestScore) {
-                bestScore = score;
-                best = c;
-            }
-        }
-
-        if (!best) return null;
-        return bestScore >= threshold ? best : null;
-    }
-
-    private async resolveItemTypesForRawItem(
-        rawItemText: string,
-    ): Promise<{ itemTypesId: number; itemName: string }> {
-        // Step 1: check raw_item cache table
-        const rawMatch = await this.matchRawItemByExactOrEmbedding(rawItemText);
-        if (rawMatch) {
-            const itemTypes = await this.itemTypesRepo.findOneBy({
-                item_types_id: rawMatch.item_types_id,
-            });
-            if (!itemTypes) {
-                // stale raw_item row; fall through to AI resolution
-            } else {
-                this.logger.log(
-                    `raw_item hit for "${rawItemText}" -> item_types_id=${rawMatch.item_types_id}`,
-                );
-                return {
-                    itemTypesId: itemTypes.item_types_id,
-                    itemName: (itemTypes.item ?? rawItemText) as string,
-                };
-            }
-        }
-
-        // Step 2: call AI to match against existing item_types
-        const itemTypes = await this.itemTypesRepo.find({
-            select: ['item_types_id', 'item', 'type_id'],
-        });
-
-        const candidates: ItemTypeCandidate[] = itemTypes
-            .filter((it) => (it.item ?? '').trim().length > 0)
-            .map((it) => ({
-                item_types_id: it.item_types_id,
-                item: it.item as string,
-                type_id: it.type_id as number,
-            }));
-
-        if (!candidates.length) {
-            // If there is no info in `item_types`, normalize/classify the raw
-            // input using AI and create the needed `type` + `item_types` rows.
-            const normalized = await this.aiService.normalize(rawItemText, 1);
-            const typeId = await this.getOrCreateTypeId(normalized.type);
-
-            const existingItemType = await this.itemTypesRepo.findOneBy({
-                type_id: typeId,
-                item: normalized.item,
-            });
-
-            const savedItemTypes = existingItemType
-                ? existingItemType
-                : await this.itemTypesRepo.save(
-                    this.itemTypesRepo.create({
-                        item: normalized.item,
-                        type_id: typeId,
-                    }),
-                );
-
-            const existingRaw = await this.rawItemRepo.findOneBy({
-                item: rawItemText,
-                item_types_id: savedItemTypes.item_types_id,
-            });
-
-            if (!existingRaw) {
-                await this.rawItemRepo.save(
-                    this.rawItemRepo.create({
-                        item: rawItemText,
-                        item_types_id: savedItemTypes.item_types_id,
-                    }),
-                );
-            }
-
-            return {
-                itemTypesId: savedItemTypes.item_types_id,
-                itemName: savedItemTypes.item ?? normalized.item,
-            };
-        }
-
-        const result: AssigningResult = await this.aiService.assigning(
-            candidates,
-            rawItemText,
-        );
-
-        // Step 3A: AI matched an existing item_types_id
-        if (typeof result === 'number') {
-            const matched = candidates.find((c) => c.item_types_id === result);
-            if (!matched) {
-                throw new NotFoundException('AI returned an item_types_id not found');
-            }
-
-            // Cache the raw input -> item_types_id mapping (so raw_item gets filled)
-            this.logger.log(
-                `AI matched existing item_types_id=${matched.item_types_id} for "${rawItemText}"`,
-            );
-            const existingRaw = await this.rawItemRepo.findOneBy({
-                item: rawItemText,
-                item_types_id: matched.item_types_id,
-            });
-            if (!existingRaw) {
-                await this.rawItemRepo.save(
-                    this.rawItemRepo.create({
-                        item: rawItemText,
-                        item_types_id: matched.item_types_id,
-                    }),
-                );
-            }
-
-            return { itemTypesId: matched.item_types_id, itemName: matched.item };
-        }
-
-        // Step 3B: AI returned a new summary -> create item_types + raw_item
-        this.logger.log(`AI fallback produced new item_types for "${rawItemText}"`);
-        const typeId = await this.getOrCreateTypeId(result.type);
-
-        const existingItemType = await this.itemTypesRepo.findOneBy({
-            type_id: typeId,
-            item: result.item,
-        });
-
-        const savedItemTypes = existingItemType
-            ? existingItemType
-            : await this.itemTypesRepo.save(
-                this.itemTypesRepo.create({
-                    item: result.item,
-                    type_id: typeId,
-                }),
-            );
-
-        // Cache the raw input -> item_types_id mapping (avoid duplicates)
-        const existingRaw = await this.rawItemRepo.findOneBy({
-            item: rawItemText,
-            item_types_id: savedItemTypes.item_types_id,
-        });
-
-        if (!existingRaw) {
-            await this.rawItemRepo.save(
-                this.rawItemRepo.create({
-                    item: rawItemText,
-                    item_types_id: savedItemTypes.item_types_id,
-                }),
-            );
-        }
-
-        return {
-            itemTypesId: savedItemTypes.item_types_id,
-            itemName: result.item,
-        };
     }
 
     private outputTypeToLabel(outputType: 1 | 2): string {
@@ -308,4 +122,5 @@ export class TransactionsService {
         );
         return created.type_id;
     }
+
 }

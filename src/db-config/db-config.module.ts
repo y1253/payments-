@@ -5,11 +5,9 @@ import { Cc } from '../cc/cc.entity';
 import { Transaction } from '../transactions/transactions.entity';
 import { Item } from '../transactions/item.entity';
 import { Store } from '../store/store.entity';
-import { Rule } from '../rule/rule.entity';
+import { Role } from '../rule/rule.entity';
 import { Type } from '../type/type.entity';
-import { ItemTypes } from '../item-types/item-types.entity';
-import { CustomTypes } from '../custom-types/custom-types.entity';
-import { RawItem } from '../raw-items/raw-item.entity';
+import { Category } from '../category/category.entity';
 
 @Module({
   imports: [
@@ -26,7 +24,7 @@ import { RawItem } from '../raw-items/raw-item.entity';
       // which causes app startup to fail.
       synchronize: false,
       autoLoadEntities: true,
-      entities: [User, Transaction, Cc, Item, Store, Rule, Type, ItemTypes, CustomTypes, RawItem]
+      entities: [User, Transaction, Cc, Item, Store, Role, Type, Category]
 
     }),
 

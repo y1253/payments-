@@ -10,6 +10,7 @@ import { CcModule } from './cc/cc.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { StoreModule } from './store/store.module';
 import { AiModule } from './ai/ai.module';
+import { CategoryModule } from './category/category.module';
 
 
 @Module({
@@ -21,6 +22,7 @@ import { AiModule } from './ai/ai.module';
     TransactionsModule,
     StoreModule,
     AiModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
