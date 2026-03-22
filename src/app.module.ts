@@ -11,6 +11,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { StoreModule } from './store/store.module';
 import { AiModule } from './ai/ai.module';
 import { CategoryModule } from './category/category.module';
+import { PhonesModule } from './phones/phones.module';
 
 
 @Module({
@@ -23,6 +24,7 @@ import { CategoryModule } from './category/category.module';
     StoreModule,
     AiModule,
     CategoryModule,
+    PhonesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

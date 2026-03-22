@@ -8,6 +8,7 @@ import { Store } from '../store/store.entity';
 import { Role } from '../rule/rule.entity';
 import { Type } from '../type/type.entity';
 import { Category } from '../category/category.entity';
+import { Phone } from '../phones/phone.entity';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { Category } from '../category/category.entity';
       // which causes app startup to fail.
       synchronize: false,
       autoLoadEntities: true,
-      entities: [User, Transaction, Cc, Item, Store, Role, Type, Category]
+      entities: [User, Transaction, Cc, Item, Store, Role, Type, Category, Phone]
 
     }),
 

@@ -197,6 +197,94 @@
       font-size: 0.9375rem;
     }
     .digest-row:last-child { border-bottom: none; }
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .category-card {
+      background: linear-gradient(145deg, #1e2a3d 0%, var(--surface) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .category-card:hover {
+      border-color: rgba(59, 130, 246, 0.45);
+      transform: translateY(-2px);
+    }
+    .category-card .cat-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .category-card .cat-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .category-card .cat-id {
+      font-size: 0.8125rem;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .category-card .cat-date {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    #categoriesEmpty {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+    }
+    .phone-card {
+      background: linear-gradient(145deg, #1a2638 0%, var(--surface) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 420px;
+    }
+    .phone-card .phone-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .phone-card .phone-number {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      font-variant-numeric: tabular-nums;
+    }
+    .phone-card .phone-meta {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    .phone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      width: fit-content;
+    }
+    #phoneVerifySection {
+      margin-top: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
   </style>
 </head>
 <body>
@@ -258,6 +346,35 @@
       </div>
 
       <div class="card-panel" style="margin-top: 20px;">
+        <h2>Phone number</h2>
+        <p id="phoneLoading" style="color: var(--text-muted); font-size: 0.9375rem; display: none;">Loading…</p>
+        <div id="phoneHasDisplay" style="display: none;">
+          <div class="phone-card">
+            <span class="phone-label">Verified number</span>
+            <span class="phone-number" id="phoneDisplayNumber"></span>
+            <span class="phone-badge">✓ Verified</span>
+            <span class="phone-meta" id="phoneDisplayMeta"></span>
+          </div>
+        </div>
+        <div id="phoneAddFlow" style="display: none;">
+          <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 12px;">
+            Add your phone number. We’ll text you a code to verify it.
+          </p>
+          <form id="phoneRequestForm">
+            <label for="phoneInput">Phone (E.164, e.g. +15551234567)</label>
+            <input type="tel" id="phoneInput" name="phone" autocomplete="tel" placeholder="+1 555 123 4567" />
+            <button type="submit" class="btn btn-primary" id="phoneSendBtn">Send verification code</button>
+          </form>
+          <div id="phoneVerifySection" style="display: none;">
+            <label for="phoneVerifyCode">6-digit code</label>
+            <input type="text" id="phoneVerifyCode" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" />
+            <button type="button" class="btn btn-primary" id="phoneVerifyBtn">Verify &amp; save</button>
+          </div>
+          <div id="phoneMessage" class="message" style="display: none;"></div>
+        </div>
+      </div>
+
+      <div class="card-panel" style="margin-top: 20px;">
         <h2>Add category</h2>
         <form id="addCategoryForm">
           <label for="categoryName">Category name</label>
@@ -265,6 +382,12 @@
           <button type="submit" class="btn btn-primary">Add category</button>
         </form>
         <div id="addCategoryMessage" class="message" style="display: none;"></div>
+      </div>
+
+      <div class="card-panel" style="margin-top: 20px;">
+        <h2>Your categories</h2>
+        <p id="categoriesEmpty" style="display: none;">No categories yet. Add one above.</p>
+        <div id="categoriesGrid" class="categories-grid"></div>
       </div>
 
       <div class="card-panel" style="margin-top: 20px;">
@@ -350,6 +473,8 @@
         logoutBtn.style.display = 'block';
         showScreen('dashboardScreen');
         loadCards();
+        loadCategories();
+        loadPhones();
       } else {
         pill.textContent = 'Not logged in';
         pill.classList.remove('logged-in');
@@ -378,6 +503,125 @@
       });
       document.getElementById('digestTotalCards').textContent = cards.length;
       document.getElementById('digestTypes').textContent = types.size ? [...types].join(', ') : '—';
+    }
+
+    async function loadCategories() {
+      const grid = document.getElementById('categoriesGrid');
+      const empty = document.getElementById('categoriesEmpty');
+      if (!grid || !empty) return;
+      grid.innerHTML = '';
+      const res = await fetch(API + '/category', { headers: headers(true) });
+      if (!res.ok) {
+        if (res.status === 401) {
+          tokenStore.clear();
+          updateUI();
+        }
+        empty.style.display = 'block';
+        empty.textContent = 'Could not load categories.';
+        return;
+      }
+      const categories = await res.json();
+      if (!Array.isArray(categories) || categories.length === 0) {
+        empty.style.display = 'block';
+        empty.textContent = 'No categories yet. Add one above.';
+        return;
+      }
+      empty.style.display = 'none';
+      categories.forEach((c) => {
+        const div = document.createElement('div');
+        div.className = 'category-card';
+        const name = (c.category != null ? String(c.category) : '—').trim() || '—';
+        const id = c.category_id != null ? c.category_id : '—';
+        let dateStr = '—';
+        if (c.create_at) {
+          try {
+            dateStr = new Date(c.create_at).toLocaleString(undefined, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            });
+          } catch (_) {}
+        }
+        div.innerHTML =
+          '<span class="cat-label">Category</span>' +
+          '<span class="cat-name">' + escapeHtml(name) + '</span>' +
+          '<span class="cat-id">ID #' + escapeHtml(String(id)) + '</span>' +
+          '<span class="cat-date">' + escapeHtml(dateStr) + '</span>';
+        grid.appendChild(div);
+      });
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    let pendingPhoneNormalized = '';
+
+    function normalizePhoneForApi(raw) {
+      const t = (raw || '').trim();
+      if (!t) return '';
+      const digits = t.replace(/\D/g, '');
+      if (t.startsWith('+')) return '+' + digits;
+      if (digits.length === 10) return '+1' + digits;
+      if (digits.length === 11 && digits.startsWith('1')) return '+' + digits;
+      return t;
+    }
+
+    async function loadPhones() {
+      const loading = document.getElementById('phoneLoading');
+      const hasEl = document.getElementById('phoneHasDisplay');
+      const addEl = document.getElementById('phoneAddFlow');
+      if (!loading || !hasEl || !addEl) return;
+
+      loading.style.display = 'block';
+      hasEl.style.display = 'none';
+      addEl.style.display = 'none';
+
+      const res = await fetch(API + '/phones', { headers: headers(true) });
+      loading.style.display = 'none';
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          tokenStore.clear();
+          updateUI();
+        }
+        addEl.style.display = 'block';
+        showMessage('phoneMessage', 'Could not load phone status.', 'error');
+        return;
+      }
+
+      const phones = await res.json();
+      if (!Array.isArray(phones)) {
+        addEl.style.display = 'block';
+        return;
+      }
+
+      if (phones.length > 0) {
+        const p = phones[0];
+        const num = (p.phone != null ? String(p.phone) : '—').trim();
+        document.getElementById('phoneDisplayNumber').textContent = num;
+        let meta = '';
+        if (p.create_at) {
+          try {
+            meta = 'Added ' + new Date(p.create_at).toLocaleString(undefined, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            });
+          } catch (_) {}
+        }
+        document.getElementById('phoneDisplayMeta').textContent = meta;
+        hasEl.style.display = 'block';
+        addEl.style.display = 'none';
+        pendingPhoneNormalized = '';
+        document.getElementById('phoneVerifySection').style.display = 'none';
+        return;
+      }
+
+      hasEl.style.display = 'none';
+      addEl.style.display = 'block';
+      document.getElementById('phoneVerifySection').style.display = 'none';
+      document.getElementById('phoneVerifyCode').value = '';
     }
 
     let currentLast4 = '';
@@ -532,6 +776,74 @@
       }
     });
 
+    document.getElementById('phoneRequestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const raw = document.getElementById('phoneInput').value;
+      const phone = normalizePhoneForApi(raw);
+      if (!phone || phone.length < 8) {
+        showMessage('phoneMessage', 'Enter a valid phone number (include country code).', 'error');
+        return;
+      }
+      pendingPhoneNormalized = phone;
+      const btn = document.getElementById('phoneSendBtn');
+      btn.disabled = true;
+      try {
+        const res = await fetch(API + '/phones', {
+          method: 'POST',
+          headers: headers(true),
+          body: JSON.stringify({ phone }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showMessage('phoneMessage', data?.message || 'Could not send code.', 'error');
+          pendingPhoneNormalized = '';
+          return;
+        }
+        showMessage('phoneMessage', 'Check your phone for a verification code.', 'success');
+        document.getElementById('phoneVerifySection').style.display = 'block';
+        document.getElementById('phoneVerifyCode').value = '';
+        document.getElementById('phoneVerifyCode').focus();
+      } catch (err) {
+        showMessage('phoneMessage', 'Network error', 'error');
+        pendingPhoneNormalized = '';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('phoneVerifyBtn').addEventListener('click', async () => {
+      const code = document.getElementById('phoneVerifyCode').value.replace(/\D/g, '');
+      if (code.length !== 6) {
+        showMessage('phoneMessage', 'Enter the 6-digit code.', 'error');
+        return;
+      }
+      const phone = pendingPhoneNormalized || normalizePhoneForApi(document.getElementById('phoneInput').value);
+      if (!phone) {
+        showMessage('phoneMessage', 'Send a code first.', 'error');
+        return;
+      }
+      const btn = document.getElementById('phoneVerifyBtn');
+      btn.disabled = true;
+      try {
+        const res = await fetch(API + '/phones/verify', {
+          method: 'POST',
+          headers: headers(true),
+          body: JSON.stringify({ phone, code }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showMessage('phoneMessage', data?.message || 'Verification failed.', 'error');
+          return;
+        }
+        showMessage('phoneMessage', 'Phone verified.', 'success');
+        loadPhones();
+      } catch (err) {
+        showMessage('phoneMessage', 'Network error', 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
     document.getElementById('addCategoryForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const categoryName = document.getElementById('categoryName').value.trim();
@@ -552,6 +864,7 @@
         }
         showMessage('addCategoryMessage', 'Category added.', 'success');
         document.getElementById('categoryName').value = '';
+        loadCategories();
       } catch (err) {
         showMessage('addCategoryMessage', 'Network error', 'error');
       }
@@ -576,6 +889,8 @@
       e.preventDefault();
       showScreen('dashboardScreen');
       loadCards();
+      loadCategories();
+      loadPhones();
     });
     document.getElementById('backToTransactions').addEventListener('click', (e) => {
       e.preventDefault();
