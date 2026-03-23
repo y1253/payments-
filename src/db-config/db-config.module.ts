@@ -23,7 +23,7 @@ import { Phone } from '../phones/phone.entity';
       // Prevent TypeORM from altering the existing Workbench schema at runtime.
       // Your DB may contain rows that violate FK constraints during schema sync,
       // which causes app startup to fail.
-      synchronize: false,
+      synchronize: true,
       autoLoadEntities: true,
       entities: [User, Transaction, Cc, Item, Store, Role, Type, Category, Phone]
 

@@ -11,9 +11,11 @@ import { AuthModule } from '../auth/auth.module';
 import { Category } from '../category/category.entity';
 import { Type } from '../type/type.entity';
 import { AiModule } from '../ai/ai.module';
+import { SignalwireModule } from '../signalwire/signalwire.module';
+import { Phone } from '../phones/phone.entity';
 
 @Module({
-    imports:[TypeOrmModule.forFeature([Store,Item,Transaction,Category,Type]),CcModule,StoreModule,AuthModule,AiModule],
+    imports:[TypeOrmModule.forFeature([Store,Item,Transaction,Category,Type,Phone]),CcModule,StoreModule,AuthModule,AiModule,SignalwireModule],
     controllers:[TransactionsController],
     providers:[TransactionsService]
 })

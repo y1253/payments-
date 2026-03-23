@@ -9,6 +9,8 @@ import { StoreService } from '../store/store.service';
 import { Type } from '../type/type.entity';
 import { Category } from '../category/category.entity';
 import { AiService } from '../ai/ai.service';
+import { Phone } from '../phones/phone.entity';
+import { SignalwireService } from '../signalwire/signalwire.service';
 
 
 @Injectable()
@@ -28,9 +30,13 @@ export class TransactionsService {
         @InjectRepository(Category)
         private readonly categoryRepo: Repository<Category>,
 
+        @InjectRepository(Phone)
+        private readonly phoneRepo: Repository<Phone>,
+
         private readonly ccService: CcService,
         private readonly storeService: StoreService,
         private readonly aiService: AiService,
+        private readonly signalwireService: SignalwireService,
 
     ) { }
     async getTransactionByCard(user_id: number, last_4: string) {
@@ -83,12 +89,17 @@ export class TransactionsService {
             category: c.category,
         }));
 
+        const smsLines: { itemLabel: string; categoryLabel: string }[] = [];
+
         for (const itemDto of transaction.items) {
             // AI chooses the best category_id from THIS user's category list.
             const categoryId = await this.aiService.assignCategoryId(
                 itemDto.item,
                 categoriesForAi,
             );
+
+            const categoryRow = userCategories.find((c) => c.category_id === categoryId);
+            const categoryLabel = categoryRow?.category ?? 'Uncategorized';
 
             const newItem = this.itemRepo.create({
                 item: itemDto.item,
@@ -101,10 +112,30 @@ export class TransactionsService {
             });
 
             await this.itemRepo.save(newItem);
+
+            smsLines.push({
+                itemLabel: (itemDto.item ?? '').trim() || 'Item',
+                categoryLabel,
+            });
         }
 
-
-
+        // SMS: if user has a saved phone, notify immediately with item → category lines.
+        const userPhone = await this.phoneRepo.findOne({
+            where: { user_id: savedCc.user_id },
+            order: { create_at: 'DESC' },
+        });
+        if (userPhone?.phone && smsLines.length) {
+            const body =
+                'New transaction\n' +
+                smsLines.map((l) => `${l.itemLabel}: ${l.categoryLabel}`).join('\n');
+            try {
+                await this.signalwireService.sendSms(userPhone.phone, body);
+            } catch (err) {
+                this.logger.warn(
+                    `SignalWire SMS failed for user_id=${savedCc.user_id}: ${(err as Error)?.message ?? err}`,
+                );
+            }
+        }
     }
 
     private outputTypeToLabel(outputType: 1 | 2): string {
