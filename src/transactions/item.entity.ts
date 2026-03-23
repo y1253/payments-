@@ -26,6 +26,10 @@ export class Item {
   @Column('decimal', { precision: 9, scale: 2 })
   price!: number;
 
+  /** How many units at `price` each. */
+  @Column({ name: 'quantity', type: 'int', default: 1 })
+  quantity!: number;
+
   @Column({ name: 'type_id' })
   type_id!: number;
 

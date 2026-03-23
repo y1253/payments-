@@ -89,10 +89,10 @@
     .items-table th, .items-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border); }
     .items-table th { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
     .items-table input { margin-bottom: 0; }
-    .items-table .col-item { width: 40%; }
-    .items-table .col-qty { width: 15%; }
-    .items-table .col-price { width: 20%; }
-    .items-table .col-actions { width: 25%; }
+    .items-table .col-item { width: 36%; }
+    .items-table .col-qty { width: 14%; }
+    .items-table .col-price { width: 18%; }
+    .items-table .col-actions { width: 22%; }
     .message { padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-size: 0.875rem; }
     .message.error { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
     .message.success { background: rgba(34, 197, 94, 0.15); color: #86efac; }
@@ -148,13 +148,15 @@
           <thead>
             <tr>
               <th class="col-item">Item</th>
-              <th class="col-price">Price</th>
+              <th class="col-qty">Qty</th>
+              <th class="col-price">Unit price</th>
               <th class="col-actions"></th>
             </tr>
           </thead>
           <tbody id="itemsBody">
             <tr class="item-row">
               <td><input type="text" name="item" placeholder="Product name" required /></td>
+              <td><input type="number" name="qty" placeholder="1" min="1" step="1" value="1" required /></td>
               <td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td>
               <td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td>
             </tr>
@@ -205,7 +207,7 @@
       const tbody = document.getElementById('itemsBody');
       const tr = document.createElement('tr');
       tr.className = 'item-row';
-      tr.innerHTML = '<td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td>';
+      tr.innerHTML = '<td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="qty" placeholder="1" min="1" step="1" value="1" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td>';
       tr.querySelector('.btn-remove-row').addEventListener('click', function () {
         if (tbody.querySelectorAll('.item-row').length > 1) tr.remove();
       });
@@ -246,9 +248,11 @@
       for (const tr of rows) {
         const inputs = tr.querySelectorAll('input');
         const item = (inputs[0] && inputs[0].value.trim()) || '';
-        const price = parseFloat(inputs[1] && inputs[1].value ? inputs[1].value : '0') || 0;
+        let quantity = parseInt(inputs[1] && inputs[1].value ? inputs[1].value : '1', 10);
+        const price = parseFloat(inputs[2] && inputs[2].value ? inputs[2].value : '0') || 0;
         if (!item) continue;
-        items.push({ item, price: isNaN(price) ? 0 : price });
+        if (Number.isNaN(quantity) || quantity < 1) quantity = 1;
+        items.push({ item, price: Number.isNaN(price) ? 0 : price, quantity });
       }
       if (items.length === 0) {
         msgEl.textContent = 'Add at least one item.';
@@ -280,7 +284,7 @@
         document.getElementById('ccNumber').value = '';
         const tbody = document.getElementById('itemsBody');
         tbody.innerHTML = '';
-        tbody.innerHTML = '<tr class="item-row"><td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td></tr>';
+        tbody.innerHTML = '<tr class="item-row"><td><input type="text" name="item" placeholder="Product name" required /></td><td><input type="number" name="qty" placeholder="1" min="1" step="1" value="1" required /></td><td><input type="number" name="price" placeholder="0.00" min="0" step="0.01" required /></td><td><button type="button" class="btn btn-ghost btn-remove-row" style="padding: 6px 10px; font-size: 0.875rem;">Remove</button></td></tr>';
       } catch (err) {
         msgEl.textContent = 'Network error.';
         msgEl.className = 'message error';

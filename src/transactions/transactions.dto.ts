@@ -5,6 +5,8 @@ import {
   IsOptional,
   ValidateNested,
   IsArray,
+  IsInt,
+  Min,
 } from 'class-validator';
 
 export class StoreDto {
@@ -34,13 +36,16 @@ export class StoreDto {
 
 export class ItemDto {
   @IsString()
-  item!: string; 
+  item!: string;
 
   @IsNumber()
+  @Type(() => Number)
   price!: number;
 
-
- 
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  quantity!: number;
 }
 
 export class CreateTransactionDto {

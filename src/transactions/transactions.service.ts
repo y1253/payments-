@@ -101,9 +101,15 @@ export class TransactionsService {
             const categoryRow = userCategories.find((c) => c.category_id === categoryId);
             const categoryLabel = categoryRow?.category ?? 'Uncategorized';
 
+            const qty =
+                typeof itemDto.quantity === 'number' && itemDto.quantity >= 1
+                    ? Math.floor(itemDto.quantity)
+                    : 1;
+
             const newItem = this.itemRepo.create({
                 item: itemDto.item,
                 price: itemDto.price,
+                quantity: qty,
                 transaction_id: savedTransaction.transaction_id,
                 transaction: savedTransaction,
                 type_id: businessTypeId,
@@ -114,7 +120,9 @@ export class TransactionsService {
             await this.itemRepo.save(newItem);
 
             smsLines.push({
-                itemLabel: (itemDto.item ?? '').trim() || 'Item',
+                itemLabel:
+                    ((itemDto.item ?? '').trim() || 'Item') +
+                    (qty > 1 ? ` ×${qty}` : ''),
                 categoryLabel,
             });
         }

@@ -19,7 +19,8 @@ export class StoreService {
             city:store.city,
             name:store.name,
             postal_code:store.postal_code,
-            region:store.region
+            region:store.region,
+            country:store.country,
         })
 
         const createdStore=await this.storeRepo.save(newStore);

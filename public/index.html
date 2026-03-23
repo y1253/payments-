@@ -401,6 +401,9 @@
           <div class="digest-row"><span>Total cards</span><strong id="digestTotalCards">0</strong></div>
           <div class="digest-row"><span>Card types</span><span id="digestTypes">—</span></div>
         </div>
+        <p style="margin-top: 14px; font-size: 0.875rem;">
+          <a href="/new.html" style="color: var(--accent);">→ New order</a> — create a transaction (store, card, items)
+        </p>
       </div>
     </section>
 
@@ -681,13 +684,17 @@
         const inputName = it.item || '—';
         const typeValue = it.type && it.type.type ? it.type.type : '—';
         const categoryValue = it.category && it.category.category ? it.category.category : '—';
+        const qty = typeof it.quantity === 'number' ? it.quantity : (parseInt(it.quantity, 10) || 1);
+        const unit = parseFloat(it.price) || 0;
+        const lineTotal = (unit * qty).toFixed(2);
         li.innerHTML =
           '<div class="item-left">' +
-          '<span class="name">Item: ' + inputName + '</span>' +
-          '<span class="normalized">Category: ' + categoryValue + '</span>' +
-          '<span class="type-label">Type: ' + typeValue + '</span>' +
+          '<span class="name">Item: ' + escapeHtml(inputName) + '</span>' +
+          '<span class="normalized">Category: ' + escapeHtml(String(categoryValue)) + '</span>' +
+          '<span class="normalized">Qty: ' + qty + ' × $' + unit.toFixed(2) + '</span>' +
+          '<span class="type-label">Type: ' + escapeHtml(String(typeValue)) + '</span>' +
           '</div>' +
-          '<span class="price">$' + (it.price ?? '0') + '</span>';
+          '<span class="price">$' + lineTotal + '</span>';
         list.appendChild(li);
       });
       showScreen('itemsScreen');
